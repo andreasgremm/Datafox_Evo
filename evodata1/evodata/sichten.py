@@ -10,15 +10,11 @@ from evodata import app
 
 
 @app.route("/")
-@app.route("/admin/evodata")
 def evodata():
     args = request.args
     geraeteliste = [v for k, v in args.items() if "Ger" in k]
     if len(geraeteliste) > 0:
         geraet = geraeteliste[0]
-
-    if request.remote_addr != current_app.config["EVODATA_IP"]:
-        abort(403)  # Forbidden
 
     influxdb_client = InfluxDBClient(
         current_app.config["INFLUXDB_HOST"],
