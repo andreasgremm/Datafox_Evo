@@ -62,7 +62,7 @@ def debug():
     )
     querystring = 'SELECT * FROM "evodata"."autogen"."evodata_event" WHERE '
     whereclause = (
-        "time >= '2021-09-23T18:30:00Z' AND time <= '2021-09-23T18:50:00Z'"
+        "time >= '2021-09-23T18:30:00Z' AND time <= '2021-12-23T18:50:00Z'"
     )
     results = influxdb_client.query(querystring + whereclause)
 
