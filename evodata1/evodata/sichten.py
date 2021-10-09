@@ -6,16 +6,13 @@ from flask import (
 )
 from influxdb import InfluxDBClient
 
-from evodata import app
+from evodata import app, basic_auth
 
 
 @app.route("/")
+@basic_auth.required
 def evodata():
     args = request.args
-    geraeteliste = [v for k, v in args.items() if "Ger" in k]
-    if len(geraeteliste) > 0:
-        geraet = geraeteliste[0]
-
     influxdb_client = InfluxDBClient(
         current_app.config["INFLUXDB_HOST"],
         current_app.config["INFLUXDB_PORT"],
@@ -28,7 +25,13 @@ def evodata():
     influxdb_data = []
     measurement = "evodata_event"
     fields = {"status": 1}
-    tags = {"System": geraet, "tag": args["Chip-Nr"]}
+    try:
+        geraeteliste = [v for k, v in args.items() if "Ger" in k]
+        tags = {"System": geraeteliste[0], "tag": args["Chip-Nr"]}
+        checksum = args["checksum"]
+    except Exception:
+        returnstatus = "status=not_ok\r\n"
+        return returnstatus, 418
     timestamp = datetime.datetime.utcnow().isoformat()
 
     data_point = {
@@ -42,17 +45,13 @@ def evodata():
     influxdb_client.write_points(
         influxdb_data, retention_policy=retention_policy
     )
-
-    checksum = args["checksum"]
     returnstatus = "status=ok&checksum=" + checksum + "\r\n"
-
     return returnstatus, 200
 
 
 @app.route("/debug")
+@basic_auth.required
 def debug():
-    if request.remote_addr != current_app.config["DEBUG_HOST"]:
-        abort(403)  # Forbidden
     influxdb_client = InfluxDBClient(
         current_app.config["INFLUXDB_HOST"],
         current_app.config["INFLUXDB_PORT"],
